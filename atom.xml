@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://blog.sluijsveld.com/"/>
-  <updated>2018-09-27T11:42:14.591Z</updated>
+  <updated>2018-09-27T11:59:41.663Z</updated>
   <id>https://blog.sluijsveld.com/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://blog.sluijsveld.com/27/09/2018/AzureContainerImageVnetAzureDevOps/"/>
     <id>https://blog.sluijsveld.com/27/09/2018/AzureContainerImageVnetAzureDevOps/</id>
     <published>2018-09-27T06:45:45.000Z</published>
-    <updated>2018-09-27T11:42:14.591Z</updated>
+    <updated>2018-09-27T11:59:41.663Z</updated>
     
     <content type="html"><![CDATA[<p>As my colleague Rene van Osnabrugge wrote about on his blog <a href="https://roadtoalm.com/2017/08/18/running-a-linux-vsts-agent-on-azure-container-instances/" target="_blank" rel="noopener">original post</a> it is possible to run your Azure DevOps agent on Azure Container instances (ACI). At Ignite 2018 Microsoft announced virtual network integration for Azure Container Instances. So now it is possible to use a ACI based Azure DevOps agent to deploy into your private network. This post explains the extra things you have to do to make this possible.</p><h2 id="Setting-up-your-virtual-network"><a href="#Setting-up-your-virtual-network" class="headerlink" title="Setting up your virtual network"></a>Setting up your virtual network</h2><p>Start by creating a virtual network if you do not have a vnet yet. This can be done using the Azure Portal or the the Azure CLI. With the CLI it can be done using the following command: </p><blockquote><p>az network vnet create -g resourcegroup -n vnetname</p></blockquote><p>after the virtual network is created we have to create a subnet where our Azure DevOps agents will be deployed. This subnet has to have the delegation for Azure Container Instances. Create the subnet using:</p><blockquote><p>az network vnet subnet create -g resourcegroup -n subnetname –vnet-name vnetname –address-prefix subnetprefix –delegations Microsoft.ContainerInstance.containerGroups</p></blockquote><p>After creation the subnet should look like this in the Azure Portal <img src="/images/AzureContainerImageVnetAzureDevOps/subnetaci.png" alt="aci subnet">.</p><h2 id="Deploy-your-private-Azure-DevOps-agent"><a href="#Deploy-your-private-Azure-DevOps-agent" class="headerlink" title="Deploy your private Azure DevOps agent"></a>Deploy your private Azure DevOps agent</h2><p>Now that the network infrastructure is ready it is time to deploy our Azure DevOps agent. Deploy it to Azure using the Azure CLI.<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">az container create -g &lt;resoursegroup&gt; -n &lt;aciagentname&gt; --image microsoft/vsts-agent --vnet-name &lt;vnetname&gt; --subnet &lt;subnetname&gt; --environment-variables VSTS_ACCOUNT=&lt;vstsaccountname&gt; VSTS_POOL=&lt;vstspoolname&gt; VSTS_TOKEN=&lt;PAT&gt; VSTS_AGENT=&lt;Agent-Name&gt;</span><br></pre></td></tr></table></figure></p><p>After a while the agent should show up inside Azure DevOps.<br><img src="/images/AzureContainerImageVnetAzureDevOps/aciagentvsts.png" alt="agent inside Azure DevOps"></p><p>and inside of Azure<br><img src="/images/AzureContainerImageVnetAzureDevOps/aciagentazure.png" alt="agent inside Azure DevOps"></p>]]></content>
     
@@ -40,6 +40,8 @@
       <category term="azure devops" scheme="https://blog.sluijsveld.com/tags/azure-devops/"/>
     
       <category term="containers" scheme="https://blog.sluijsveld.com/tags/containers/"/>
+    
+      <category term="docker" scheme="https://blog.sluijsveld.com/tags/docker/"/>
     
   </entry>
   
@@ -62,9 +64,9 @@
     </summary>
     
     
-      <category term="azure" scheme="https://blog.sluijsveld.com/tags/azure/"/>
-    
       <category term="aspnetcore" scheme="https://blog.sluijsveld.com/tags/aspnetcore/"/>
+    
+      <category term="azure" scheme="https://blog.sluijsveld.com/tags/azure/"/>
     
       <category term="docker" scheme="https://blog.sluijsveld.com/tags/docker/"/>
     
