@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Deploying a Docker Composed Application on Service Fabric | Chris = blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Last week on the Build 2017 conference in Seattle Microsoft showed how they have added support for Docker compose to Azure Service Fabric. They demonstrated this on stage during a breakout session on">
+<meta name="keywords" content="azure,docker,service fabric">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Deploying a Docker Composed Application on Service Fabric">
+<meta property="og:url" content="https://blog.sluijsveld.com/20/05/2017/DeployingDockerComposedAppOnServiceFabric/index.html">
+<meta property="og:site_name" content="Chris = blog">
+<meta property="og:description" content="Last week on the Build 2017 conference in Seattle Microsoft showed how they have added support for Docker compose to Azure Service Fabric. They demonstrated this on stage during a breakout session on">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://blog.sluijsveld.com/images/DeployingDockerComposedAppOnServiceFabric/step1SFCreate.png">
+<meta property="og:image" content="https://blog.sluijsveld.com/images/DeployingDockerComposedAppOnServiceFabric/step2SFCreate.png">
+<meta property="og:image" content="https://blog.sluijsveld.com/images/DeployingDockerComposedAppOnServiceFabric/DnsServiceSF.png">
+<meta property="og:image" content="https://blog.sluijsveld.com/images/DeployingDockerComposedAppOnServiceFabric/apprunningSF.png">
+<meta property="og:updated_time" content="2018-09-26T09:34:44.982Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Deploying a Docker Composed Application on Service Fabric">
+<meta name="twitter:description" content="Last week on the Build 2017 conference in Seattle Microsoft showed how they have added support for Docker compose to Azure Service Fabric. They demonstrated this on stage during a breakout session on">
+<meta name="twitter:image" content="https://blog.sluijsveld.com/images/DeployingDockerComposedAppOnServiceFabric/step1SFCreate.png">
+<meta name="twitter:creator" content="@cvsluijsveld">
+  
+    <link rel="alternative" href="/atom.xml" title="Chris = blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110055010-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-110055010-1');
+
+  // gtag('config', 'UA-110055010-1');
+</script>
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Chris = blog</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">Coding and other things</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-home-icon" class="nav-icon" href="/"></a>
+        
+          <a id="nav-archives-icon" class="nav-icon" href="/archives"></a>
+        
+          <a id="nav-about-icon" class="nav-icon" href="/about"></a>
+        
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-DeployingDockerComposedAppOnServiceFabric" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Deploying a Docker Composed Application on Service Fabric
+    </h1>
+  
+
+      </header>
+    
+    <time class="article-date" datetime="2017-05-20T09:59:31.000Z" itemprop="datePublished">20-05-2017</time>
+    
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Last week on the Build 2017 conference in Seattle Microsoft showed how they have added support for Docker compose to <a href="https://azure.microsoft.com/en-us/services/service-fabric" target="_blank" rel="noopener">Azure Service Fabric</a>. They demonstrated this on stage during a breakout session on day 2.</p>
+<p>When you want to try this yourself the getting started is missing a lot of information. In this post, I will try to explain what you have to do to get this running.</p>
+<p>First you have to make sure you deploy a Service Fabric cluster in Azure which meets the following prerequisites:</p>
+<ul>
+<li>Deployed on Windows Server 2016 Datacenter with Containers </li>
+<li>Has fabric version 255.255.5713.255 or newer</li>
+<li>Has DnsService deployed and enabled</li>
+<li>Has port 80 opened on the loadbalancer</li>
+</ul>
+<p>After these requirements are met you can deploy a Docker composed application to this cluster using the Azure CLI.</p>
+<h3 id="Creating-a-Cluster"><a href="#Creating-a-Cluster" class="headerlink" title="Creating a Cluster"></a>Creating a Cluster</h3><p>Let’s start with creating a cluster <a id="more"></a> using the portal. Make sure that you select the options using the image below to select the needed options.<br><img src="/images/DeployingDockerComposedAppOnServiceFabric/step1SFCreate.png" alt="Step 1 Create Service Fabric Cluster"><br>In the next step select the options as below<br><img src="/images/DeployingDockerComposedAppOnServiceFabric/step2SFCreate.png" alt="Step 2 Create Service Fabric Cluster"><br>Now in the last step instead of clicking <strong>Create</strong> to actually create the cluster use the <strong>download template and parameters</strong> button. Save this zip file and unpack it to modify the template.json file. Locate the <strong>“type”: “Microsoft.ServiceFabric/clusters”</strong> part in this json file and change the following:</p>
+<ul>
+<li>Change the apiVersion to <strong>2017-07-01-preview</strong></li>
+<li>Add the Service Fabric DnsNamingService after the <strong>“fabricSettings”: []</strong> inside the addonFeatures node.</li>
+</ul>
+<p>The fabric part should look like this afterwards:<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">"fabricSettings": [],</span><br><span class="line">"addonFeatures": [</span><br><span class="line">    <span class="string">"DnsService"</span></span><br><span class="line">],</span><br></pre></td></tr></table></figure></p>
+<p>Now the deploy the ARM template using your preferred method. For example, using the Deploy.ps1 powershell script included in the zip file.</p>
+<h3 id="Checking-the-Cluster"><a href="#Checking-the-Cluster" class="headerlink" title="Checking the Cluster"></a>Checking the Cluster</h3><p>After deployment go to the Service Fabric explorer of the newly created cluster and check that the DnsService is running. The system section of the cluster should look like <img src="/images/DeployingDockerComposedAppOnServiceFabric/DnsServiceSF.png" alt="DnsService inside Service Fabric"></p>
+<h3 id="Deploy-a-containerized-application"><a href="#Deploy-a-containerized-application" class="headerlink" title="Deploy a containerized application"></a>Deploy a containerized application</h3><p>Now we are ready to the deploy a Docker application using Azure CLI and Docker compose. Make sure you have the Azure CLI 2.0 installed and updated. I am using version 2.0.6. You can find it here <a href="https://docs.microsoft.com/en-us/cli/azure/install-azure-cli" target="_blank" rel="noopener">Azure CLI</a>. </p>
+<p>Next, create a Docker compose application using the following contents.<br><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">'3'</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"></span><br><span class="line"><span class="attr">  legacyenterprisedataapp:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="string">mfussell/legacyenterprisedataapp:v3</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"8080:8080"</span></span><br><span class="line"></span><br><span class="line"><span class="attr">  legacyenterprisewebapp:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="string">mfussell/legacyenterprisewebapp:v3</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"80:80"</span></span><br><span class="line"></span><br><span class="line"><span class="attr">networks:</span></span><br><span class="line"><span class="attr">  default:</span></span><br><span class="line"><span class="attr">    external:</span></span><br><span class="line"><span class="attr">      name:</span> <span class="string">nat</span></span><br></pre></td></tr></table></figure></p>
+<p>Connect to the cluster using <strong>az sf cluster select –endpoint <a href="http://clustername.westeurope.cloudapp.azure.com:19080" target="_blank" rel="noopener">http://clustername.westeurope.cloudapp.azure.com:19080</a></strong>. Check the connection using <strong>az sf cluster health</strong></p>
+<p>Now deploy your Docker composed application to Service Fabric using <strong>az sf compose create –application-id fabric:/Build2017App –compose-file docker-compose.yml</strong></p>
+<p>Checking the Service Fabric explorer should reveal that one application is deployed with the name <em>Build2017App</em>. Browsing to <a href="http://clustername.westeurope.cloudapp.azure.com" target="_blank" rel="noopener">http://clustername.westeurope.cloudapp.azure.com</a> now shows the Legacy Enterprise Webapp showed on Build 2017 running on Service Fabric.</p>
+<p><img src="/images/DeployingDockerComposedAppOnServiceFabric/apprunningSF.png" alt="Docker Application running on Service Fabric"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://blog.sluijsveld.com/20/05/2017/DeployingDockerComposedAppOnServiceFabric/" data-id="cjmkiehmn00075gw4aus4rwcb" class="article-share-link">Share</a>
+      
+        <a href="https://blog.sluijsveld.com/20/05/2017/DeployingDockerComposedAppOnServiceFabric/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/azure/">azure</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/docker/">docker</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/service-fabric/">service fabric</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/23/11/2017/PrometheusMonitoring/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Monitoring Kubernetes with Prometheus and Grafana
+        
+      </div>
+    </a>
+  
+  
+    <a href="/28/01/2016/CustomSwaggerUIField/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Adding a Authorization field to the Swagger UI</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 Chris van Sluijsveld<br>
+      <a href="https://github.com/steven5538/hexo-theme-athena" target="_blank">Athena</a> by <a href="http://steven5538.tw" target="_blank">Steven5538</a> | Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+<script>
+  var disqus_shortname = 'blogsluijsveld';
+  
+  var disqus_url = 'https://blog.sluijsveld.com/20/05/2017/DeployingDockerComposedAppOnServiceFabric/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//go.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Adding a Authorization field to the Swagger UI | Chris = blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="The code in this post is build using VS2015 and AspNetCore RC1  Recently we have been looking at Swagger as a way to generate a meta data endpoint for our Web Api’s. You can easily do this by adding">
+<meta name="keywords" content="aspnetcore,swagger,webapi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Adding a Authorization field to the Swagger UI">
+<meta property="og:url" content="https://blog.sluijsveld.com/28/01/2016/CustomSwaggerUIField/index.html">
+<meta property="og:site_name" content="Chris = blog">
+<meta property="og:description" content="The code in this post is build using VS2015 and AspNetCore RC1  Recently we have been looking at Swagger as a way to generate a meta data endpoint for our Web Api’s. You can easily do this by adding">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://blog.sluijsveld.com/images/CustomSwaggerUIField/SwaggerUI.png">
+<meta property="og:image" content="https://blog.sluijsveld.com/images/CustomSwaggerUIField/SwaggerUIWithAuth.png">
+<meta property="og:updated_time" content="2018-09-26T09:34:44.981Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Adding a Authorization field to the Swagger UI">
+<meta name="twitter:description" content="The code in this post is build using VS2015 and AspNetCore RC1  Recently we have been looking at Swagger as a way to generate a meta data endpoint for our Web Api’s. You can easily do this by adding">
+<meta name="twitter:image" content="https://blog.sluijsveld.com/images/CustomSwaggerUIField/SwaggerUI.png">
+<meta name="twitter:creator" content="@cvsluijsveld">
+  
+    <link rel="alternative" href="/atom.xml" title="Chris = blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110055010-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-110055010-1');
+
+  // gtag('config', 'UA-110055010-1');
+</script>
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Chris = blog</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">Coding and other things</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-home-icon" class="nav-icon" href="/"></a>
+        
+          <a id="nav-archives-icon" class="nav-icon" href="/archives"></a>
+        
+          <a id="nav-about-icon" class="nav-icon" href="/about"></a>
+        
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-CustomSwaggerUIField" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Adding a Authorization field to the Swagger UI
+    </h1>
+  
+
+      </header>
+    
+    <time class="article-date" datetime="2016-01-28T17:59:31.000Z" itemprop="datePublished">28-01-2016</time>
+    
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p><em>The code in this post is build using VS2015 and AspNetCore RC1</em></p>
+</blockquote>
+<p>Recently we have been looking at <a href="https://swagger.io" target="_blank" rel="noopener">Swagger</a> as a way to generate a meta data endpoint for our Web Api’s. You can easily do this by adding the <a href="https://www.nuget.org/packages/Swashbuckle/6.0.0-rc1-final" target="_blank" rel="noopener">Swashbuckle</a> NuGet packages to you solution.</p>
+<h3 id="Setting-up-Swashbuckle"><a href="#Setting-up-Swashbuckle" class="headerlink" title="Setting up Swashbuckle"></a>Setting up Swashbuckle</h3><p>You start by adding the following packages to your package.json:<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">"Swashbuckle.SwaggerGen": "6.0.0-rc1-final"</span><br><span class="line">"Swashbuckle.SwaggerUi": "6.0.0-rc1-final"</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<p>You then add the following code<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">services.AddSwaggerGen();</span><br><span class="line">services.ConfigureSwaggerDocument(options =&gt;</span><br><span class="line">&#123;</span><br><span class="line">    options.SingleApiVersion(<span class="keyword">new</span> Info</span><br><span class="line">    &#123;</span><br><span class="line">        Version = <span class="string">"v1"</span>,</span><br><span class="line">        Title = <span class="string">"Blog Test Api"</span>,</span><br><span class="line">        Description = <span class="string">"A test API for this blogpost"</span></span><br><span class="line">    &#125;);                </span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>to your <code>ConfigureServices</code> method inside <code>Startup.cs</code> file. Then you add the following lines<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">app.UseSwaggerGen()</span><br><span class="line">app.UseSwaggerUi();</span><br></pre></td></tr></table></figure></p>
+<p>to your <code>Configure</code> method inside <code>Startup.cs</code>. After compiling and running the application you can go to your api url /swagger/ui to get a page looking like this.<br><img src="/images/CustomSwaggerUIField/SwaggerUI.png" alt="Swagger UI"><br>The test page even enables you to do quick testing of your API. Everything looks fine right? Well, this works if your Web Api is accessible without credentials. When you have a Web Api that only accept JWT Bearer tokens for example the standard page is useless unless you disable your authorization.</p>
+<p>Luckily the <a href="https://www.nuget.org/packages/Swashbuckle/6.0.0-rc1-final" target="_blank" rel="noopener">Swashbuckle</a> package has a way to add custom fields to the Swagger user interface.</p>
+<h3 id="OperationFilters"><a href="#OperationFilters" class="headerlink" title="OperationFilters"></a>OperationFilters</h3><p>You start by creating a class which implements the interface called <code>IOperationFilter</code>. Then you have to implement the Apply method with your custom logic. In our case the method looks like this.<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Apply</span>(<span class="params">Operation operation, OperationFilterContext context</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> filterPipeline = context.ApiDescription.ActionDescriptor.FilterDescriptors;</span><br><span class="line">    <span class="keyword">var</span> isAuthorized = filterPipeline.Select(filterInfo =&gt; filterInfo.Filter).Any(filter =&gt; filter <span class="keyword">is</span> AuthorizeFilter);</span><br><span class="line">                <span class="keyword">var</span> allowAnonymous = filterPipeline.Select(filterInfo =&gt; filterInfo.Filter).Any(filter =&gt; filter <span class="keyword">is</span> IAllowAnonymousFilter);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (isAuthorized &amp;&amp; !allowAnonymous)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (operation.Parameters == <span class="literal">null</span>)</span><br><span class="line">            operation.Parameters = <span class="keyword">new</span> List&lt;IParameter&gt;();</span><br><span class="line"></span><br><span class="line">        operation.Parameters.Add(<span class="keyword">new</span> NonBodyParameter</span><br><span class="line">        &#123;                    </span><br><span class="line">            Name = <span class="string">"Authorization"</span>,</span><br><span class="line">            In = <span class="string">"header"</span>,</span><br><span class="line">            Description = <span class="string">"access token"</span>,</span><br><span class="line">            Required = <span class="literal">true</span>,</span><br><span class="line">            Type = <span class="string">"string"</span></span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>In our case we add a NonBodyParameter to the set of parameters within the generated user interface. After implementing the <code>OperationFilter</code> the only thing left is letting Swashbuckle know the <code>OperationFilter</code> exists. You do that by adding the following statement to the <code>ConfigureServices</code> part of <code>Startup.cs</code>.<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">options.OperationFilter(<span class="keyword">new</span> AuthorizationHeaderParameterOperationFilter());</span><br></pre></td></tr></table></figure></p>
+<p>The total Swashbuckle configuration then looks like<br><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">services.AddSwaggerGen();</span><br><span class="line">services.ConfigureSwaggerDocument(options =&gt;</span><br><span class="line">&#123;</span><br><span class="line">   options.SingleApiVersion(<span class="keyword">new</span> Info</span><br><span class="line">   &#123;</span><br><span class="line">       Version = <span class="string">"v1"</span>,</span><br><span class="line">       Title = <span class="string">"Blog Test Api"</span>,</span><br><span class="line">       Description = <span class="string">"A test API for this blogpost"</span></span><br><span class="line">   &#125;);</span><br><span class="line">   options.OperationFilter(<span class="keyword">new</span> AuthorizationHeaderParameterOperationFilter());</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>If you then go to the Swagger UI page you will notice there is a new field added to the generated Swagger UI methods.<br><img src="/images/CustomSwaggerUIField/SwaggerUIWithAuth.png" alt="Swagger UI with Authorization field"></p>
+<h3 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h3><p>And there you have it. An easy way to extend the default Swashbuckle generated UI with new fields that are necessary to quickly test your Web Api’s successfully.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://blog.sluijsveld.com/28/01/2016/CustomSwaggerUIField/" data-id="cjmkiehmg00015gw41wehw3kz" class="article-share-link">Share</a>
+      
+        <a href="https://blog.sluijsveld.com/28/01/2016/CustomSwaggerUIField/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/aspnetcore/">aspnetcore</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/swagger/">swagger</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/webapi/">webapi</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/20/05/2017/DeployingDockerComposedAppOnServiceFabric/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Deploying a Docker Composed Application on Service Fabric
+        
+      </div>
+    </a>
+  
+  
+    <a href="/26/01/2016/Windows10spotlight/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Windows 10 spotlight images as wallpaper</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 Chris van Sluijsveld<br>
+      <a href="https://github.com/steven5538/hexo-theme-athena" target="_blank">Athena</a> by <a href="http://steven5538.tw" target="_blank">Steven5538</a> | Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+<script>
+  var disqus_shortname = 'blogsluijsveld';
+  
+  var disqus_url = 'https://blog.sluijsveld.com/28/01/2016/CustomSwaggerUIField/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//go.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+  </div>
+</body>
+</html>
