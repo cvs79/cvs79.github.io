@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Secretless deployments to Azure with Github Actions | Chris = blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="DisclaimerThe following example uses the beta Azure CLI for now. The CLI change is not yet available in the stable release of Azure CLI. When deploying from Github Actions to Azure you have to Login t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Secretless deployments to Azure with Github Actions">
+<meta property="og:url" content="https://blog.sluijsveld.com/25/10/2021/FederatedOIDCGithubActions/index.html">
+<meta property="og:site_name" content="Chris &#x3D; blog">
+<meta property="og:description" content="DisclaimerThe following example uses the beta Azure CLI for now. The CLI change is not yet available in the stable release of Azure CLI. When deploying from Github Actions to Azure you have to Login t">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.sluijsveld.com/images/FederatedOIDCGithubActions/oidaad.png">
+<meta property="og:image" content="https://blog.sluijsveld.com/images/FederatedOIDCGithubActions/fedcredaad.png">
+<meta property="article:published_time" content="2021-10-25T06:45:45.000Z">
+<meta property="article:modified_time" content="2021-10-26T15:47:12.619Z">
+<meta property="article:author" content="Chris van Sluijsveld">
+<meta property="article:tag" content="azure">
+<meta property="article:tag" content="github">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.sluijsveld.com/images/FederatedOIDCGithubActions/oidaad.png">
+<meta name="twitter:creator" content="@cvsluijsveld">
+  
+    <link rel="alternative" href="/atom.xml" title="Chris = blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110055010-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-110055010-1');
+
+  // gtag('config', 'UA-110055010-1');
+</script>
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Chris = blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-home-icon" class="nav-icon" href="/"></a>
+        
+          <a id="nav-archives-icon" class="nav-icon" href="/archives"></a>
+        
+          <a id="nav-about-icon" class="nav-icon" href="/about"></a>
+        
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-FederatedOIDCGithubActions" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Secretless deployments to Azure with Github Actions
+    </h1>
+  
+
+      </header>
+    
+    <time class="article-date" datetime="2021-10-25T06:45:45.000Z" itemprop="datePublished">25-10-2021</time>
+    
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Disclaimer"><a href="#Disclaimer" class="headerlink" title="Disclaimer"></a>Disclaimer</h3><p>The following example uses the beta Azure CLI for now. The CLI change is not yet available in the stable release of Azure CLI.</p>
+<p>When deploying from Github Actions to Azure you have to Login to Azure with the <code>azure/login</code> action. This action requires a Service Principal secret which can be stored in Github secrets. However, these secrets are available in Github workflow using them and can even be written to the output with echo for example.</p>
+<p>With the new <strong> <a href="mailto:azure/login@v1.4.0" target="_blank" rel="noopener">azure/login@v1.4.0</a> </strong> action you can use <strong> <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation-create-trust-github" target="_blank" rel="noopener">Federated credentials</a> </strong> to login to Azure. Because this feature essentially establishes a trust between Github and Azure Active Directory there is no need for a password/secret anymore. </p>
+<h2 id="Create-App-registration-and-Federated-Credential-in-Azure"><a href="#Create-App-registration-and-Federated-Credential-in-Azure" class="headerlink" title="Create App registration and Federated Credential in Azure"></a>Create App registration and Federated Credential in Azure</h2><p>First start by creating a normal AppRegistration in Azure Active Directory. After that go to <strong> Certificates &amp; secrets </strong> and then to the tab <strong> Federated credentials. </strong> </p>
+<p><img src="/images/FederatedOIDCGithubActions/oidaad.png" alt="Federated Credentials in AAD"></p>
+<p>Create a Federated Credential in Azure Active Directory. This is the credential that will be used to login to Azure. Fill in the correct values for your Github Repository.</p>
+<p><img src="/images/FederatedOIDCGithubActions/fedcredaad.png" alt="Federated Credentials creation"></p>
+<h2 id="Modify-Github-workflow-to-use-Federated-Credentials-to-login-on-Azure"><a href="#Modify-Github-workflow-to-use-Federated-Credentials-to-login-on-Azure" class="headerlink" title="Modify Github workflow to use Federated Credentials to login on Azure"></a>Modify Github workflow to use Federated Credentials to login on Azure</h2><p>After the first step of creating the AppRegistration and Federated Credential you can now modify the Github workflow to use the federated credentials. </p>
+<p>A example of the modified workflow is shown below.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">deploy</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span> <span class="string">[</span> <span class="string">main</span> <span class="string">]</span></span><br><span class="line">  <span class="attr">workflow_dispatch:</span></span><br><span class="line"></span><br><span class="line"><span class="attr">permissions:</span></span><br><span class="line">  <span class="attr">id-token:</span> <span class="string">write</span></span><br><span class="line">  <span class="attr">contents:</span> <span class="string">read</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">deploy_ota:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Deploy</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Install</span> <span class="string">CLI-beta</span></span><br><span class="line">      <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line">        <span class="string">cd</span> <span class="string">../..</span></span><br><span class="line">        <span class="string">CWD="$(pwd)"</span></span><br><span class="line">        <span class="string">python3</span> <span class="string">-m</span> <span class="string">venv</span> <span class="string">oidc-venv</span></span><br><span class="line">        <span class="string">.</span> <span class="string">oidc-venv/bin/activate</span></span><br><span class="line">        <span class="string">echo</span> <span class="string">"activated environment"</span> </span><br><span class="line">        <span class="string">python3</span> <span class="string">-m</span> <span class="string">pip</span> <span class="string">install</span> <span class="string">--upgrade</span> <span class="string">pip</span></span><br><span class="line">        <span class="string">echo</span> <span class="string">"started installing cli beta"</span> </span><br><span class="line">        <span class="string">pip</span> <span class="string">install</span> <span class="string">-q</span> <span class="string">--extra-index-url</span> <span class="string">https://azcliprod.blob.core.windows.net/beta/simple/</span> <span class="string">azure-cli</span></span><br><span class="line">        <span class="string">echo</span> <span class="string">"installed cli beta"</span>    </span><br><span class="line">        <span class="string">echo</span> <span class="string">"$CWD/oidc-venv/bin"</span> <span class="string">&gt;&gt;</span> <span class="string">$GITHUB_PATH</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># Login to Azure </span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Azure</span> <span class="string">Login</span> <span class="string">Xpirit</span></span><br><span class="line">      <span class="attr">uses:</span> <span class="string">azure/login@v1.4.0</span></span><br><span class="line">      <span class="attr">with:</span></span><br><span class="line">        <span class="attr">client-id:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.AZURE_CLIENTID</span> <span class="string">&#125;&#125;</span></span><br><span class="line">        <span class="attr">tenant-id:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.AZURE_TENANTID</span> <span class="string">&#125;&#125;</span></span><br><span class="line">        <span class="attr">subscription-id:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.AZURE_SUBSCRIPTIONID</span> <span class="string">&#125;&#125;</span></span><br><span class="line"></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">'Run az commands'</span></span><br><span class="line">      <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line">        <span class="string">az</span> <span class="string">account</span> <span class="string">set</span> <span class="string">-s</span> <span class="string">'Microsoft Azure Sponsorship 2020'</span></span><br><span class="line">        <span class="string">az</span> <span class="string">group</span> <span class="string">create</span> <span class="string">-l</span> <span class="string">westeurope</span> <span class="string">-n</span> <span class="string">rg-githubexporter</span></span><br><span class="line">        <span class="string">az</span> <span class="string">deployment</span> <span class="string">group</span> <span class="string">create</span> <span class="string">-g</span> <span class="string">rg-githubexporter</span> <span class="string">--template-file</span> <span class="string">./main.bicep</span> <span class="string">--parameters</span> <span class="string">./parameters.json</span></span><br></pre></td></tr></table></figure>
+<p>The important part is the change to the <strong> <a href="mailto:azure/login@v1.4.0" target="_blank" rel="noopener">azure/login@v1.4.0</a> </strong> action. Instead of providing a client secret it is now possible to use the federated credentials. The only information that is needed is the client id, tenant id and subscription id. Because of the trust between Github and Azure Active Directory there is no need for a password/secret anymore.</p>
+<p>This sample uses the beta version of the Azure CLI. To install it please visit <a href="https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-beta?view=azure-cli-latest&amp;tabs=powershell#how-to-install-azure-cli-beta" target="_blank" rel="noopener">Azure CLI Beta</a>.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://blog.sluijsveld.com/25/10/2021/FederatedOIDCGithubActions/" data-id="ckv8aphbt0007ocsspyktudtb" class="article-share-link">Share</a>
+      
+        <a href="https://blog.sluijsveld.com/25/10/2021/FederatedOIDCGithubActions/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/azure/" rel="tag">azure</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/github/" rel="tag">github</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/27/09/2018/AzureContainerImageVnetAzureDevOps/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Running Azure DevOps agents inside your virtual network using ACI</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Chris van Sluijsveld<br>
+      <a href="https://github.com/steven5538/hexo-theme-athena" target="_blank">Athena</a> by <a href="http://steven5538.tw" target="_blank">Steven5538</a> | Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+<script>
+  var disqus_shortname = 'blogsluijsveld';
+  
+  var disqus_url = 'https://blog.sluijsveld.com/25/10/2021/FederatedOIDCGithubActions/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//go.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
