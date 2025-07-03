@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <!--Description-->
+
+    
+
+    
+        <meta name="description" content="Blog by Chris van Sluijsveld about Platform Engineering, Azure, AI and other stuff"/>
+    
+
+    <!--Author-->
+    
+        <meta name="author" content="Chris van Sluijsveld"/>
+    
+
+    <!--Open Graph Title-->
+    
+        <meta property="og:title" content="Secretless deployments to Azure with Github Actions"/>
+    
+
+    <!--Open Graph Description-->
+    
+        <meta property="og:description" content="Blog by Chris van Sluijsveld about Platform Engineering, Azure, AI and other stuff"/>
+    
+
+    <!--Open Graph Site Name-->
+        <meta property="og:site_name" content="Platform Engineering, AI and other stuff"/>
+
+    <!--Type page-->
+    
+        <meta property="og:type" content="article"/>
+    
+
+    <!--Page Cover-->
+    
+    
+        <meta property="og:image" content="https://blog.platformengineering.devimg/bg.jpeg"/>
+    
+
+        <meta name="twitter:card" content="summary_large_image"/>
+
+    
+
+    
+        <meta name="twitter:image" content="https://blog.platformengineering.devimg/bg.jpeg"/>
+    
+
+    <!-- Title -->
+    
+    <title>Secretless deployments to Azure with Github Actions - Platform Engineering, AI and other stuff</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    <!-- Custom Fonts -->
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <link href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css"/>
+    <link href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css"/>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="//oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="//oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Gallery -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/featherlight/1.3.5/featherlight.min.css" type="text/css" rel="stylesheet"/>
+
+    <!-- Google Analytics -->
+    
+
+
+    <!-- favicon -->
+    
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+
+    <!-- Menu -->
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Platform Engineering Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                
+                    <li>
+                        <a href="/">
+                            
+                                Home
+                            
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/archives">
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/tags">
+                            
+                                Tags
+                            
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a target="_blank" rel="noopener" href="https://github.com/cvs79">
+                            
+                                <i class="fa fa-github fa-stack-2x"></i>
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <!-- Main Content -->
+    <!-- Page Header -->
+<!-- Set your background image for this header in your post front-matter: cover -->
+
+<header class="intro-header" style="background-image: url('/img/bg.jpeg')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <h1>Secretless deployments to Azure with Github Actions</h1>
+                    
+                    <span class="meta">
+                        <!-- Date and Author -->
+                        
+                        
+                            25-10-2021
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Tags and categories -->
+           
+                <div class="col-lg-4 col-lg-offset-2 col-md-5 col-md-offset-1 post-tags">
+                    
+                        
+
+
+<a href="/tags/azure/">#azure</a> <a href="/tags/github/">#github</a>
+
+
+                    
+                </div>
+                <div class="col-lg-4 col-md-5 post-categories">
+                    
+                </div>
+            
+
+            <!-- Gallery -->
+            
+
+            <!-- Post Main Content -->
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <h3 id="Disclaimer"><a href="#Disclaimer" class="headerlink" title="Disclaimer"></a>Disclaimer</h3><p>The following example uses the beta Azure CLI for now. The CLI change is not yet available in the stable release of Azure CLI.</p>
+<p>When deploying from Github Actions to Azure you have to Login to Azure with the <code>azure/login</code> action. This action requires a Service Principal secret which can be stored in Github secrets. However, these secrets are available in Github workflow using them and can even be written to the output with echo for example.</p>
+<p>With the new ** azure&#x2F;<a href="mailto:&#x6c;&#111;&#x67;&#x69;&#110;&#64;&#118;&#x31;&#x2e;&#x34;&#x2e;&#48;">login@v1.4.0</a> ** action you can use ** <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation-create-trust-github">Federated credentials</a> ** to login to Azure. Because this feature essentially establishes a trust between Github and Azure Active Directory there is no need for a password&#x2F;secret anymore. </p>
+<h2 id="Create-App-registration-and-Federated-Credential-in-Azure"><a href="#Create-App-registration-and-Federated-Credential-in-Azure" class="headerlink" title="Create App registration and Federated Credential in Azure"></a>Create App registration and Federated Credential in Azure</h2><p>First start by creating a normal AppRegistration in Azure Active Directory. After that go to ** Certificates &amp; secrets ** and then to the tab ** Federated credentials. ** </p>
+<p><img src="/images/FederatedOIDCGithubActions/oidaad.png" alt="Federated Credentials in AAD"></p>
+<p>Create a Federated Credential in Azure Active Directory. This is the credential that will be used to login to Azure. Fill in the correct values for your Github Repository.</p>
+<p><img src="/images/FederatedOIDCGithubActions/fedcredaad.png" alt="Federated Credentials creation"></p>
+<h2 id="Modify-Github-workflow-to-use-Federated-Credentials-to-login-on-Azure"><a href="#Modify-Github-workflow-to-use-Federated-Credentials-to-login-on-Azure" class="headerlink" title="Modify Github workflow to use Federated Credentials to login on Azure"></a>Modify Github workflow to use Federated Credentials to login on Azure</h2><p>After the first step of creating the AppRegistration and Federated Credential you can now modify the Github workflow to use the federated credentials. </p>
+<p>A example of the modified workflow is shown below.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">deploy</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span> [ <span class="string">main</span> ]</span><br><span class="line">  <span class="attr">workflow_dispatch:</span></span><br><span class="line"></span><br><span class="line"><span class="attr">permissions:</span></span><br><span class="line">  <span class="attr">id-token:</span> <span class="string">write</span></span><br><span class="line">  <span class="attr">contents:</span> <span class="string">read</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">deploy_ota:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Deploy</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Install</span> <span class="string">CLI-beta</span></span><br><span class="line">      <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">        cd ../..</span></span><br><span class="line"><span class="string">        CWD=&quot;$(pwd)&quot;</span></span><br><span class="line"><span class="string">        python3 -m venv oidc-venv</span></span><br><span class="line"><span class="string">        . oidc-venv/bin/activate</span></span><br><span class="line"><span class="string">        echo &quot;activated environment&quot; </span></span><br><span class="line"><span class="string">        python3 -m pip install --upgrade pip</span></span><br><span class="line"><span class="string">        echo &quot;started installing cli beta&quot; </span></span><br><span class="line"><span class="string">        pip install -q --extra-index-url https://azcliprod.blob.core.windows.net/beta/simple/ azure-cli</span></span><br><span class="line"><span class="string">        echo &quot;installed cli beta&quot;    </span></span><br><span class="line"><span class="string">        echo &quot;$CWD/oidc-venv/bin&quot; &gt;&gt; $GITHUB_PATH</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">    <span class="comment"># Login to Azure </span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Azure</span> <span class="string">Login</span> <span class="string">Xpirit</span></span><br><span class="line">      <span class="attr">uses:</span> <span class="string">azure/login@v1.4.0</span></span><br><span class="line">      <span class="attr">with:</span></span><br><span class="line">        <span class="attr">client-id:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.AZURE_CLIENTID</span> <span class="string">&#125;&#125;</span></span><br><span class="line">        <span class="attr">tenant-id:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.AZURE_TENANTID</span> <span class="string">&#125;&#125;</span></span><br><span class="line">        <span class="attr">subscription-id:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.AZURE_SUBSCRIPTIONID</span> <span class="string">&#125;&#125;</span></span><br><span class="line"></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">&#x27;Run az commands&#x27;</span></span><br><span class="line">      <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">        az account set -s &#x27;Microsoft Azure Sponsorship 2020&#x27;</span></span><br><span class="line"><span class="string">        az group create -l westeurope -n rg-githubexporter</span></span><br><span class="line"><span class="string">        az deployment group create -g rg-githubexporter --template-file ./main.bicep --parameters ./parameters.json</span></span><br></pre></td></tr></table></figure>
+
+<p>The important part is the change to the ** azure&#x2F;<a href="mailto:&#108;&#x6f;&#103;&#x69;&#110;&#64;&#x76;&#x31;&#46;&#x34;&#46;&#48;">login@v1.4.0</a> ** action. Instead of providing a client secret it is now possible to use the federated credentials. The only information that is needed is the client id, tenant id and subscription id. Because of the trust between Github and Azure Active Directory there is no need for a password&#x2F;secret anymore.</p>
+<p>This sample uses the beta version of the Azure CLI. To install it please visit <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-beta?view=azure-cli-latest&tabs=powershell#how-to-install-azure-cli-beta">Azure CLI Beta</a>.</p>
+
+
+                
+            </div>
+
+            <!-- Comments -->
+            
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    
+
+
+                </div>
+            
+        </div>
+    </div>
+</article>
+
+    <!-- Footer -->
+    <hr />
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+
+                    
+
+                    
+                        <li>
+                            <a href="https://github.com/cvs79" target="_blank">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                    
+
+                    
+                        <li>
+                            <a href="https://linkedin.com/in/cvs79" target="_blank">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                    
+
+                    
+
+                    
+                </ul>
+                <p class="copyright text-muted">&copy; 2025 Chris van Sluijsveld<br></p>
+                <p class="copyright text-muted">Original Theme <a target="_blank" href="http://startbootstrap.com/template-overviews/clean-blog/">Clean Blog</a> from <a href="http://startbootstrap.com/" target="_blank">Start Bootstrap</a></p>
+                <p class="copyright text-muted">Adapted for <a target="_blank" href="https://hexo.io/">Hexo</a> by <a href="http://www.codeblocq.com/" target="_blank">Jonathan Klughertz</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+    <!-- After footer scripts -->
+    
+<!-- jQuery -->
+<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<!-- Bootstrap -->
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<!-- Gallery -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/featherlight/1.3.5/featherlight.min.js" type="text/javascript" charset="utf-8"></script>
+
+<!-- Disqus Comments -->
+
+
+
+</body>
+
+</html>

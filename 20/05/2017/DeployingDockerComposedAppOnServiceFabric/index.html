@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <!--Description-->
+
+    
+
+    
+        <meta name="description" content="Blog by Chris van Sluijsveld about Platform Engineering, Azure, AI and other stuff"/>
+    
+
+    <!--Author-->
+    
+        <meta name="author" content="Chris van Sluijsveld"/>
+    
+
+    <!--Open Graph Title-->
+    
+        <meta property="og:title" content="Deploying a Docker Composed Application on Service Fabric"/>
+    
+
+    <!--Open Graph Description-->
+    
+        <meta property="og:description" content="Blog by Chris van Sluijsveld about Platform Engineering, Azure, AI and other stuff"/>
+    
+
+    <!--Open Graph Site Name-->
+        <meta property="og:site_name" content="Platform Engineering, AI and other stuff"/>
+
+    <!--Type page-->
+    
+        <meta property="og:type" content="article"/>
+    
+
+    <!--Page Cover-->
+    
+    
+        <meta property="og:image" content="https://blog.platformengineering.devimg/bg.jpeg"/>
+    
+
+        <meta name="twitter:card" content="summary_large_image"/>
+
+    
+
+    
+        <meta name="twitter:image" content="https://blog.platformengineering.devimg/bg.jpeg"/>
+    
+
+    <!-- Title -->
+    
+    <title>Deploying a Docker Composed Application on Service Fabric - Platform Engineering, AI and other stuff</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    <!-- Custom Fonts -->
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <link href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css"/>
+    <link href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css"/>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="//oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="//oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Gallery -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/featherlight/1.3.5/featherlight.min.css" type="text/css" rel="stylesheet"/>
+
+    <!-- Google Analytics -->
+    
+
+
+    <!-- favicon -->
+    
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+
+    <!-- Menu -->
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Platform Engineering Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                
+                    <li>
+                        <a href="/">
+                            
+                                Home
+                            
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/archives">
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/tags">
+                            
+                                Tags
+                            
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a target="_blank" rel="noopener" href="https://github.com/cvs79">
+                            
+                                <i class="fa fa-github fa-stack-2x"></i>
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <!-- Main Content -->
+    <!-- Page Header -->
+<!-- Set your background image for this header in your post front-matter: cover -->
+
+<header class="intro-header" style="background-image: url('/img/bg.jpeg')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <h1>Deploying a Docker Composed Application on Service Fabric</h1>
+                    
+                    <span class="meta">
+                        <!-- Date and Author -->
+                        
+                        
+                            20-05-2017
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Tags and categories -->
+           
+                <div class="col-lg-4 col-lg-offset-2 col-md-5 col-md-offset-1 post-tags">
+                    
+                        
+
+
+<a href="/tags/azure/">#azure</a> <a href="/tags/docker/">#docker</a> <a href="/tags/service-fabric/">#service fabric</a>
+
+
+                    
+                </div>
+                <div class="col-lg-4 col-md-5 post-categories">
+                    
+                </div>
+            
+
+            <!-- Gallery -->
+            
+
+            <!-- Post Main Content -->
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <p>Last week on the Build 2017 conference in Seattle Microsoft showed how they have added support for Docker compose to <a target="_blank" rel="noopener" href="https://azure.microsoft.com/en-us/services/service-fabric">Azure Service Fabric</a>. They demonstrated this on stage during a breakout session on day 2.</p>
+<p>When you want to try this yourself the getting started is missing a lot of information. In this post, I will try to explain what you have to do to get this running.</p>
+<p>First you have to make sure you deploy a Service Fabric cluster in Azure which meets the following prerequisites:</p>
+<ul>
+<li>Deployed on Windows Server 2016 Datacenter with Containers </li>
+<li>Has fabric version 255.255.5713.255 or newer</li>
+<li>Has DnsService deployed and enabled</li>
+<li>Has port 80 opened on the loadbalancer</li>
+</ul>
+<p>After these requirements are met you can deploy a Docker composed application to this cluster using the Azure CLI.</p>
+<h3 id="Creating-a-Cluster"><a href="#Creating-a-Cluster" class="headerlink" title="Creating a Cluster"></a>Creating a Cluster</h3><p>Let’s start with creating a cluster <span id="more"></span> using the portal. Make sure that you select the options using the image below to select the needed options.<br><img src="/images/DeployingDockerComposedAppOnServiceFabric/step1SFCreate.png" alt="Step 1 Create Service Fabric Cluster"><br>In the next step select the options as below<br><img src="/images/DeployingDockerComposedAppOnServiceFabric/step2SFCreate.png" alt="Step 2 Create Service Fabric Cluster"><br>Now in the last step instead of clicking <strong>Create</strong> to actually create the cluster use the <strong>download template and parameters</strong> button. Save this zip file and unpack it to modify the template.json file. Locate the <strong>“type”: “Microsoft.ServiceFabric&#x2F;clusters”</strong> part in this json file and change the following:</p>
+<ul>
+<li>Change the apiVersion to <strong>2017-07-01-preview</strong></li>
+<li>Add the Service Fabric DnsNamingService after the <strong>“fabricSettings”: []</strong> inside the addonFeatures node.</li>
+</ul>
+<p>The fabric part should look like this afterwards:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;fabricSettings&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line"><span class="attr">&quot;addonFeatures&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;DnsService&quot;</span></span><br><span class="line"><span class="punctuation">]</span><span class="punctuation">,</span></span><br></pre></td></tr></table></figure>
+
+<p>Now the deploy the ARM template using your preferred method. For example, using the Deploy.ps1 powershell script included in the zip file.</p>
+<h3 id="Checking-the-Cluster"><a href="#Checking-the-Cluster" class="headerlink" title="Checking the Cluster"></a>Checking the Cluster</h3><p>After deployment go to the Service Fabric explorer of the newly created cluster and check that the DnsService is running. The system section of the cluster should look like <img src="/images/DeployingDockerComposedAppOnServiceFabric/DnsServiceSF.png" alt="DnsService inside Service Fabric"></p>
+<h3 id="Deploy-a-containerized-application"><a href="#Deploy-a-containerized-application" class="headerlink" title="Deploy a containerized application"></a>Deploy a containerized application</h3><p>Now we are ready to the deploy a Docker application using Azure CLI and Docker compose. Make sure you have the Azure CLI 2.0 installed and updated. I am using version 2.0.6. You can find it here <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/cli/azure/install-azure-cli">Azure CLI</a>. </p>
+<p>Next, create a Docker compose application using the following contents. </p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">legacyenterprisedataapp:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">mfussell/legacyenterprisedataapp:v3</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;8080:8080&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">legacyenterprisewebapp:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">mfussell/legacyenterprisewebapp:v3</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;80:80&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">networks:</span></span><br><span class="line">  <span class="attr">default:</span></span><br><span class="line">    <span class="attr">external:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nat</span></span><br></pre></td></tr></table></figure>
+<p>Connect to the cluster using <strong>az sf cluster select –endpoint <a target="_blank" rel="noopener" href="http://clustername.westeurope.cloudapp.azure.com:19080/">http://clustername.westeurope.cloudapp.azure.com:19080</a></strong>. Check the connection using <strong>az sf cluster health</strong></p>
+<p>Now deploy your Docker composed application to Service Fabric using <strong>az sf compose create –application-id fabric:&#x2F;Build2017App –compose-file docker-compose.yml</strong></p>
+<p>Checking the Service Fabric explorer should reveal that one application is deployed with the name <em>Build2017App</em>. Browsing to <a target="_blank" rel="noopener" href="http://clustername.westeurope.cloudapp.azure.com/">http://clustername.westeurope.cloudapp.azure.com</a> now shows the Legacy Enterprise Webapp showed on Build 2017 running on Service Fabric.</p>
+<p><img src="/images/DeployingDockerComposedAppOnServiceFabric/apprunningSF.png" alt="Docker Application running on Service Fabric"></p>
+
+
+                
+            </div>
+
+            <!-- Comments -->
+            
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    
+
+
+                </div>
+            
+        </div>
+    </div>
+</article>
+
+    <!-- Footer -->
+    <hr />
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+
+                    
+
+                    
+                        <li>
+                            <a href="https://github.com/cvs79" target="_blank">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                    
+
+                    
+                        <li>
+                            <a href="https://linkedin.com/in/cvs79" target="_blank">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                    
+
+                    
+
+                    
+                </ul>
+                <p class="copyright text-muted">&copy; 2025 Chris van Sluijsveld<br></p>
+                <p class="copyright text-muted">Original Theme <a target="_blank" href="http://startbootstrap.com/template-overviews/clean-blog/">Clean Blog</a> from <a href="http://startbootstrap.com/" target="_blank">Start Bootstrap</a></p>
+                <p class="copyright text-muted">Adapted for <a target="_blank" href="https://hexo.io/">Hexo</a> by <a href="http://www.codeblocq.com/" target="_blank">Jonathan Klughertz</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+    <!-- After footer scripts -->
+    
+<!-- jQuery -->
+<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<!-- Bootstrap -->
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<!-- Gallery -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/featherlight/1.3.5/featherlight.min.js" type="text/javascript" charset="utf-8"></script>
+
+<!-- Disqus Comments -->
+
+
+
+</body>
+
+</html>
